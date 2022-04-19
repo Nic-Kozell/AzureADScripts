@@ -17,7 +17,7 @@ Function New-PAAccount {
   [ValidatePattern("^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$")]
   [Parameter(Mandatory = $true)][string]$UserEmail = $InputData.UserEmail 
   #[ValidateSet("OYA", "ODE", "EIS", "OSP", "PERS", "ODOT", "DOC", "OPRD", "OMD", "OED", "ODVA", "OHCS", "DEQ", "DOR", "DEQ")]
-  [Parameter(Mandatory = $true)][string]$HomeAgency = $InputData.HomeAgency 
+  # [Parameter(Mandatory = $true)][string]$HomeAgency = $InputData.HomeAgency 
   [ValidatePattern("^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$")]
   [ValidateScript({$UserEmail -ne $_})]
   [Parameter(Mandatory = $true)][string]$SecondaryContact = $InputData.SecondaryContact
@@ -38,7 +38,7 @@ Function New-PAAccount {
     userPrincipalName = ""
     givenName         = ""
     surname           = ""
-    companyName       = $HomeAgency
+    companyName       = ""
     userType          = "Member"
     usageLocation     = "US"
     otherMails        = ""
@@ -81,7 +81,8 @@ Function New-PAAccount {
   
   Write-Output "Getting user account"
   try {
-    $user = Invoke-RestMethod -Method Get -Uri https://graph.microsoft.com/v1.0/users/$UserPrincipalName -Headers $authHeader
+    $user = Invoke-RestMethod -Method Get -Headers $authHeader -Uri "https://graph.microsoft.com/v1.0/users/$($UserPrincipalName)?`$select=givenName,surname,displayName,companyName,userPrincipalName,mail"
+     
   }
   catch {
     Write-Error -Message "Error gathering user information: "$_
@@ -92,7 +93,7 @@ Function New-PAAccount {
   do {
     $userCheck = $false
     try {
-      $paUPNCheck = $("$($AccountType.ToLower())_$($HomeAgency.ToLower())_$(($user.givenName.Substring(0,1)+$user.surname).toLower()+$i)@$($domainSuffix.$($context.tenant.id))") 
+      $paUPNCheck = $("$($AccountType.ToLower())_$($($user.companyName).ToLower())_$(($user.givenName.Substring(0,1)+$user.surname).toLower()+$i)@$($domainSuffix.$($context.tenant.id))") 
       Invoke-RestMethod -Method Get -Headers $authHeader -Uri "https://graph.microsoft.com/v1.0/users/$paUPNCheck" | Out-Null
       $i += 1
     }
@@ -101,12 +102,13 @@ Function New-PAAccount {
     }
   }while ($userCheck -eq $false)
 
-  $newUserParams.UserPrincipalName = $("$($AccountType.ToLower())_$($HomeAgency.ToLower())_$(($user.givenName.Substring(0,1)+$user.surname).toLower()+$i)@$($domainSuffix.$($context.tenant.id))") 
+  $newUserParams.UserPrincipalName = $("$($AccountType.ToLower())_$($($user.companyName).ToLower())_$(($user.givenName.Substring(0,1)+$user.surname).toLower()+$i)@$($domainSuffix.$($context.tenant.id))") 
   $newUserParams.GivenName = $user.givenName
   $newUserParams.Surname = $user.surname
   $newUserParams.OtherMails = @($user.mail)
-  $newUserParams.DisplayName = "$($AccountType.ToUpper()) * $($HomeAgency.ToUpper()) * $(($user.givenName.Substring(0,1)+$user.surname).toUpper()+$i)"
-  $newUserParams.MailNickname = "$($AccountType.ToLower())_$($HomeAgency.ToLower())_$(($user.givenName.Substring(0,1)+$user.surname).toLower()+$i)"
+  $newUserParams.DisplayName = "$($AccountType.ToUpper()) * $($($user.companyName).ToUpper()) * $(($user.givenName.Substring(0,1)+$user.surname).toUpper()+$i)"
+  $newUserParams.MailNickname = "$($AccountType.ToLower())_$($($user.companyName).ToLower())_$(($user.givenName.Substring(0,1)+$user.surname).toLower()+$i)"
+  $newUserParams.companyName = $user.companyName
 
   Add-Type -AssemblyName System.Web
   $newUserParams.PasswordProfile.Password = [System.Web.Security.Membership]::GeneratePassword(16,2)
@@ -161,5 +163,5 @@ Function New-PAAccount {
   $outlook.Quit()
 
   Write-Output "Set manager to "$userManager.userPrincipalName
-}
 
+}
