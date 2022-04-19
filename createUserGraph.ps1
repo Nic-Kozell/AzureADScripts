@@ -24,7 +24,7 @@ Function New-PAAccount {
   [ValidateSet("Task", "Request")]
   [Parameter(Mandatory = $true)][string]$RequestOrTask = $InputData.RequestOrTask
   [ValidatePattern("\d")]
-  [Parameter(Mandatory = $true)][string]$IsmNumber
+  [Parameter(Mandatory = $true)][string]$IsmNumber = $InputData.IsmNumber
   }
   catch{
     Write-Output "Issue validating parameters :"$_
