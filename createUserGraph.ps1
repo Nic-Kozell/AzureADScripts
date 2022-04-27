@@ -81,7 +81,7 @@ Function New-PAAccount {
   
   Write-Output "Getting user account"
   try {
-    $user = Invoke-RestMethod -Method Get -Headers $authHeader -Uri "https://graph.microsoft.com/v1.0/users/$($UserPrincipalName)?`$select=givenName,surname,displayName,companyName,userPrincipalName,mail"
+    $user = Invoke-RestMethod -Method Get -Headers $authHeader -Uri "https://graph.microsoft.com/v1.0/users/$($UserPrincipalName)?`$select=id,givenName,surname,displayName,companyName,userPrincipalName,mail"
      
   }
   catch {
@@ -125,7 +125,7 @@ Function New-PAAccount {
 
   Write-Output "Setting PA user manager"
   try {
-    $userManager = Invoke-RestMethod -Method Get -Uri "https://graph.microsoft.com/v1.0/users/$($user.id)/manager" -Headers $authHeader
+    $userManager = Invoke-RestMethod -Method Get -Uri "https://graph.microsoft.com/v1.0/users/$($user.id)/manager" -Headers $authHeader 
     # $params = @{
     #   "@odata.id" = "https://graph.microsoft.com/v1.0/users/$($newPaUser.id)"
     # }
