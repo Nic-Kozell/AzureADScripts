@@ -41,67 +41,74 @@ $authHeader = @{
 
 $uriString = "https://graph.microsoft.com/beta/reports/credentialUserRegistrationDetails?`$filter=userPrincipalName eq '$UserPrincipalName'"
 
-do {
-    $token = (Invoke-RestMethod @request).access_token
-    $authHeader = @{
-        'Content-Type'  = 'application/json'
-        'Authorization' = "bearer $token"
-        }
-        
-        $mfaEnabled = (Invoke-RestMethod -Method Get -Headers $authHeader -Uri $uriString).value.isMfaRegistered
-        
-        if ( $mfaEnabled -eq $True -and $runCounter -lt 10 ){
-            $runCounter = 10
-            $fromAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
-            $toAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
-            $mailSubject = "MFA for $UserPrincipalName" 
-            $mailMessage = "MFA has been enabled you can do things now."
+$mfaEnabled = (Invoke-RestMethod -Method Get -Headers $authHeader -Uri $uriString).value.isMfaRegistered
 
-        }
-        elseif ($mfaEnabled -eq $False -and $runCounter -lt 10){
-            $runCounter += 1
-            $fromAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
-            $toAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
-            $mailSubject = "MFA has not been enrolled"
-            $mailMessage = "MFA has not been enrolled on your PA account $UserPrincipalName FYI no access can be provisioned untill this has been completed. Email $runCounter out of 10."
+return "$UserPrincipalName isMfaRegistered: $mfaEnabled"
 
-        }
-        elseif ($mfaEnabled -eq $False -and $runCounter -eq 10){
-            $runCounter += 1
-            $fromAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
-            $toAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
-            $mailSubject = "MFA has not been enrolled cancel"
-            $mailMessage = "MFA has not been enrolled and 10 notifications have passed, this Task will now be closed with no further action."
-        }
-        # Build the Microsoft Graph API request
-        $params = @{
-          "URI"         = "https://graph.microsoft.com/v1.0/users/$fromAddress/sendMail"
-          "Headers"     = @{
-            "Authorization" = ("Bearer {0}" -F $token)
-          }
-          "Method"      = "POST"
-          "ContentType" = 'application/json'
-          "Body" = (@{
-            "message" = @{
-              "subject" = $mailSubject
-              "body"    = @{
-                "contentType" = 'Text'
-                "content"     = $mailMessage
-              }
-              "toRecipients" = @(
-                @{
-                  "emailAddress" = @{
-                    "address" = $toAddress
-                  }
-                }
-              )
-            }
-          }) | ConvertTo-JSON -Depth 10
-        }
+# do {
+#     $token = (Invoke-RestMethod @request).access_token
+#     $authHeader = @{
+#         'Content-Type'  = 'application/json'
+#         'Authorization' = "bearer $token"
+#         }
         
-        #Send the message
-        Invoke-RestMethod @params -Verbose
-        #endregion
-      Start-Sleep -Seconds 2
+#         $mfaEnabled = (Invoke-RestMethod -Method Get -Headers $authHeader -Uri $uriString).value.isMfaRegistered
+        
+#         if ( $mfaEnabled -eq $True -and $runCounter -lt 10 ){
+#             $runCounter = 10
+#             $fromAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
+#             $toAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
+#             $mailSubject = "MFA for $UserPrincipalName" 
+#             $mailMessage = "MFA has been enabled you can do things now."
+
+#         }
+#         elseif ($mfaEnabled -eq $False -and $runCounter -lt 10){
+#             $runCounter += 1
+#             $fromAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
+#             $toAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
+#             $mailSubject = "MFA has not been enrolled"
+#             $mailMessage = "MFA has not been enrolled on your PA account $UserPrincipalName FYI no access can be provisioned untill this has been completed. Email $runCounter out of 10."
+
+#         }
+#         elseif ($mfaEnabled -eq $False -and $runCounter -eq 10){
+#             $runCounter += 1
+#             $fromAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
+#             $toAddress = 'nicholas.kozell@kozelltest.onmicrosoft.com'
+#             $mailSubject = "MFA has not been enrolled cancel"
+#             $mailMessage = "MFA has not been enrolled and 10 notifications have passed, this Task will now be closed with no further action."
+#         }
+#         # Build the Microsoft Graph API request
+#         $params = @{
+#           "URI"         = "https://graph.microsoft.com/v1.0/users/$fromAddress/sendMail"
+#           "Headers"     = @{
+#             "Authorization" = ("Bearer {0}" -F $token)
+#           }
+#           "Method"      = "POST"
+#           "ContentType" = 'application/json'
+#           "Body" = (@{
+#             "message" = @{
+#               "subject" = $mailSubject
+#               "body"    = @{
+#                 "contentType" = 'Text'
+#                 "content"     = $mailMessage
+#               }
+#               "toRecipients" = @(
+#                 @{
+#                   "emailAddress" = @{
+#                     "address" = $toAddress
+#                   }
+#                 }
+#               )
+#             }
+#           }) | ConvertTo-JSON -Depth 10
+#         }
+        
+#         #Send the message
+#         Invoke-RestMethod @params -Verbose
+#         #endregion
+#       Start-Sleep -Seconds 2
     
-} until ($runCounter -eq 11)
+# } until ($runCounter -eq 11)
+
+    
+    
