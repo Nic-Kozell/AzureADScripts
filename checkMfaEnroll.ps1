@@ -2,8 +2,11 @@ param (
     [Parameter (Mandatory = $true)]
     [object] $WebHookData
 )
+if ($WebHookData) {
+write-output $WebHookData
 
-$InputData = ConvertFrom-Json -InputObject $WebHookData
+
+$InputData = (ConvertFrom-Json -InputObject $WebHookData.RequestBody)
 
 [ValidatePattern("^\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$")]
 [Parameter(Mandatory = $true)][string]$UserPrincipalName = $InputData.userPrincipalName
@@ -43,7 +46,10 @@ $uriString = "https://graph.microsoft.com/beta/reports/credentialUserRegistratio
 
 $mfaEnabled = (Invoke-RestMethod -Method Get -Headers $authHeader -Uri $uriString).value.isMfaRegistered
 
-return "$UserPrincipalName isMfaRegistered: $mfaEnabled"
+write-output $UserPrincipalName
+
+return $mfaEnabled
+}
 
 # do {
 #     $token = (Invoke-RestMethod @request).access_token
